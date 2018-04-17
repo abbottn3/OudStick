@@ -36,6 +36,7 @@ bool Pick_active[] = {false, false, false, false, false, false}; //is it current
 short Pick_hit[N_STR];                             //has it been hit on this loop
 int Pick_pins[] = {Pick0, Pick1, Pick2, Pick3, Pick4, Pick5};
 short Pick_count[N_STR];
+short Pick_high[N_STR];
 
 short Pot_vals[N_STR];                            //current sensor values
 short Pot_old[N_STR];                             //old sensor values for comparison
@@ -66,6 +67,7 @@ void setup() {
     Pick_vals[i] = 0;
     Pick_count[i] = 0;
     Pick_old[i] = 0;
+    Pick_high[i] = 0;
     pinMode(Pick_pins[i], INPUT);  // set pins for pluck(string) pickups
     pinMode(Pot_pins[i], INPUT);  // set pins for note(fret) pickups
     calibration(i);
@@ -127,23 +129,33 @@ void readControls(){
 // If it has, then return the value. If it hasn't, then check if it's low enough to be
 // be considered "off". If it is, set it to inactive.
 short checkTriggered(int i){
-  short v = analogRead(Pick_pins[i]) - Pick_offsets[i];
+  short v = abs(analogRead(Pick_pins[i]) - Pick_offsets[i]);
   short ret = 0;
   /*
   if (v > Pick_old[i]) {
     Pick_old[i] = v;
   }
   */
-  if(!Pick_active[i] && v > Thresh[i] && v > Pick_vals[i] && Pick_count[i] > 100){   // if it wasn't already reading and it's greater than threshold
-    Pick_active[i] = true;
-    Pick_vals[i] = v;
-    ret = v;
+  if(!Pick_active[i] && v > Thresh[i]){   // if it wasn't already reading and it's greater than threshold
+    Pick_count[i] += 1;
+    if (v > Pick_high[i]) {
+      Pick_high[i] = v;
+    }
+    if (Pick_count[i] > 2) {
+      Pick_active[i] = true;
+      Pick_vals[i] = Pick_high[i];
+      ret = Pick_high[i];
+      Pick_high[i] = 0;
+    }
   }
-  Pick_count[i] += 1;
-  if(Pick_active[i] && v < PICK_LOW && Pick_count[i] > 150){  // if it WAS active, but is now low enough to be considered off, turn off
-    Pick_active[i] = false;
-    Pick_vals[i] = 0;
-    Pick_count[i] = 0;
+  
+  if(Pick_active[i] && v < PICK_LOW){  // if it WAS active, but is now low enough to be considered off, turn off
+    Pick_count[i] += 1;
+    if (Pick_count[i] > 35) {
+      Pick_active[i] = false;
+      Pick_vals[i] = 0;
+      Pick_count[i] = 0;
+    }
   }
   if (Pick_count[i] > 1000) {
     Pick_count[i] = 0;
@@ -219,8 +231,10 @@ void pickNotes(){
 void cleanUp(){ 
   for (int i=0; i<N_STR; i++){
     if(Pot_active[i] && !fretTouched[i] && !Pick_active[i]){
-        MIDI.sendNoteOff(Pot_active[i], 0, i);
-        Pot_active[i] = 0;
+        if (Pot_active[i] != offsets[i]) {
+          MIDI.sendNoteOff(Pot_active[i], 0, i);
+          Pot_active[i] = 0;
+        }       
     }
   }
 }
