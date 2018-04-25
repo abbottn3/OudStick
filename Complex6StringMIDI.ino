@@ -23,13 +23,7 @@
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
 const int channel = 1;
-/*
-#define PSTRIP A2
-int pstripin = 0;
-int pstripinold = 0;
-int note = 0x1E;
-int ledPin = 13;
-*/
+
 short Pick_vals[N_STR];
 short Pick_old[N_STR];
 bool Pick_active[] = {false, false, false, false, false, false}; //is it currently active
@@ -77,23 +71,12 @@ void setup() {
 }
 
 void loop() {
-  /*
-  pstripin = analogRead(PSTRIP);
-  note = 15 + ((pstripin/20)%60);
-  if (abs(pstripin - pstripinold) > 10) {
-    MIDI.sendNoteOn(note, 100, channel);
-    delay(200);
-    pstripinold = pstripin;
-  }
-  */
   readControls();
-  determineFrets ();
-  
+  determineFrets (); 
   //legatoTest();
   pickNotes();
   cleanUp();
-  delay(5);
-  
+  delay(5); 
 }
 
 void calibration(int i){
@@ -131,11 +114,6 @@ void readControls(){
 short checkTriggered(int i){
   short v = abs(analogRead(Pick_pins[i]) - Pick_offsets[i]);
   short ret = 0;
-  /*
-  if (v > Pick_old[i]) {
-    Pick_old[i] = v;
-  }
-  */
   if(!Pick_active[i] && v > Thresh[i]){   // if it wasn't already reading and it's greater than threshold
     Pick_count[i] += 1;
     if (v > Pick_high[i]) {
@@ -220,9 +198,6 @@ void pickNotes(){
       Serial.print(Pick_hit[i]);
       Serial.print(", ");
       Serial.println(i);
-      
-      
-      //noteOn(0x90 + channel, Pot_active[i], 100);
     }
   }
 }
@@ -238,10 +213,4 @@ void cleanUp(){
     }
   }
 }
-
-/* Notes:
- * - fretTouched and Pot_active hold note values
- * - confused about the channel
- * - 8192 is pitchbend offset
- */
 
