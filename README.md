@@ -1,5 +1,5 @@
 # OudStick
-The code provided is intended for use with the Teensy 3.6. The Arduino IDE in conjunction with the Teensy software allows the code to be written to the board.
+The only software in use for the OudStick is Complex6StringMIDI.ino. This code is intended for use with the Teensy 3.6. The Arduino IDE in conjunction with the Teensy software allows the code to be written to the board.
 
 Complex6StringMIDI utilizes the MIDI.h library to send MIDI signals through the serial connection. The main function used in this library is MIDI.sendNoteOn(note, volume, channel). The note part of the command is the pitch. The pitch value is a char, and each single unit represents a semitone (ie 60 is middle C, and 61 is C sharp). The volume is out of 100 and determines the attack of the note to be sent to the computer. Lastly, the channel portion of the command is how MIDI instructions are read. There can be up to 15 channels, which allows you to soften one of those notes or bend the pitch (going inbetween semitones). If each string's command is sent on a different channel, adjusting certain qualities of that channel allows it to be edited alone without affecting the others.
 
